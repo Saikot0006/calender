@@ -17,7 +17,8 @@
             android:id="@+id/calendarView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:selectionColor="@color/purple_200" />
 
 
         <Button
@@ -42,19 +43,22 @@
             android:hint="event name"
             android:autofillHints=""/>
 
-        <ScrollView
+        <TextView
+            android:id="@+id/calenderTV"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/editText"
-            android:layout_marginTop="50dp">
+            android:layout_below="@+id/editText"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:text="No Events"
+            app:layout_constraintTop_toBottomOf="@+id/editText"/>
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/calendarRV"
+            app:layout_constraintTop_toBottomOf="@+id/calenderTV"/>
 
-            <TextView
-                android:id="@+id/calenderTV"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/editText"/>
-        </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

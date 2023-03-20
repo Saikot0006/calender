@@ -13,4 +13,7 @@ interface EventsDao {
 
     @Query("select * from tbl_event")
     fun getAllData() : LiveData<List<EvenModel>>
+
+    @Query("select * from tbl_event where date = :date")
+    fun getDataByDate(date : Long) : LiveData<List<EvenModel>>
 }

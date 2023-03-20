@@ -3,57 +3,54 @@ package com.example.myapplication
 import android.R
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.applandeo.materialcalendarview.CalendarDay
 import com.applandeo.materialcalendarview.EventDay
 import com.applandeo.materialcalendarview.listeners.OnDayClickListener
 import com.example.myapplication.databinding.ActivityMainBinding
-import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity()  {
     private lateinit var binding: ActivityMainBinding
     val events = mutableListOf<EventDay>()
     private var selectedDate : Long  = 0
-
-
+    private lateinit var eventList : ArrayList<EvenModel>
+    private lateinit var caledarAdapter: CalendarAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
 
-        val calender = Calendar.getInstance();
         selectedDate = System.currentTimeMillis()
-
-
+        autoSelectDate(Calendar.getInstance())
+        eventList = ArrayList()
+        caledarAdapter = CalendarAdapter()
 
         EventDB.getDB(application).getDao().getAllData().observe(this) {
-            val str = StringBuilder()
             it.forEach {
-                Log.e("name", "onCreate: "+it.name )
-                str.append(it.name+"\n")
-
                 val cal = Calendar.getInstance()
                 cal.timeInMillis = it.date
                 events.add(EventDay(cal, R.drawable.alert_dark_frame))
-
             }
-          //  calender.set(2023,2,22)
-          //  calender.set(2023,2,20)
-           // events.add(EventDay(calender, R.drawable.alert_dark_frame))
-            Log.e("eventsSize", "onCreate: "+events.size )
             binding.calendarView.setEvents(events)
-            binding.calenderTV.text = str
+
+        }
+
+        binding.calendarRV.apply {
+            layoutManager = LinearLayoutManager(applicationContext)
+            adapter = caledarAdapter
         }
 
         binding.buttonSave.setOnClickListener {
             var eventName = binding.editText.text.toString()
             var evenModel = EvenModel(name = eventName, date = selectedDate)
-            Log.e("eventName", "onDayClick: "+evenModel.toString() )
 
             CoroutineScope(Dispatchers.Main).launch {
                 EventDB.getDB(application).getDao().insertEvent(evenModel)
@@ -61,27 +58,53 @@ class MainActivity : AppCompatActivity()  {
             }
         }
 
-
         binding.calendarView.setOnDayClickListener(object : OnDayClickListener{
             override fun onDayClick(eventDay: EventDay) {
                 binding.calendarView.setDate(eventDay.calendar)
-                //calendarView.setCurrentDate(CalendarDay.from(year, month, day), true);
-                Log.e("calendar", "onDayClick: "+eventDay.calendar.timeInMillis )
                 selectedDate = eventDay.calendar.timeInMillis
+                val cal = Calendar.getInstance()
+                cal.timeInMillis = selectedDate
+                Log.e("selectedDate", "onDayClick: "+selectedDate )
+
+
+                EventDB.getDB(applicationContext).getDao().getDataByDate(selectedDate).observe(this@MainActivity) {
+                    if(it.size > 0){
+                        caledarAdapter.submitList(it)
+                        Log.e("event", "onDayClick: No Event" )
+                        binding.calendarRV.visibility = View.VISIBLE
+                        binding.calenderTV.visibility = View.GONE
+
+                    }else{
+                        binding.calendarRV.visibility = View.GONE
+                        binding.calenderTV.visibility = View.VISIBLE
+                        Log.e("event", "onDayClick: No Event" )
+                    }
+
+                   // eventList = it
+                    Log.e("selectedDate", "onDayClick: "+it.size.toString() )
+                }
+
+                autoSelectDate(cal)
+
             }
         })
 
 
-        //calendar.set(2023, 3, 5)
-       // calendar.timeInMillis = System.currentTimeMillis()
-
-      //  events.add(EventDay(calendar, R.drawable.alert_dark_frame))
-
-      //  binding.calendarView.setEvents(events)
 
         setContentView(binding.root)
 
     }
 
+    private fun autoSelectDate(cal: Calendar) {
+        val list = listOf(
+            CalendarDay(cal).apply {
+                labelColor = R.color.black
+                backgroundResource  = R.color.holo_blue_light
+
+            }
+        )
+
+        binding.calendarView.setCalendarDays(list)
+    }
 
 }
